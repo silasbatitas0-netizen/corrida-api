@@ -5,9 +5,20 @@ const swaggerUi = require("swagger-ui-express");
 const app = express();
 app.use(express.json());
 
-mongoose.connect(process.env.MONGODB_URI)
-  .then(() => console.log("MongoDB conectado"))
-  .catch((erro) => console.log("Erro ao conectar MongoDB:", erro));
+mongoose.connect(process.env.MONGODB_URI);
+
+mongoose.connection.on("connected", () => {
+  console.log("MongoDB conectado");
+});
+
+mongoose.connection.on("error", (erro) => {
+  console.error("ERRO MONGODB:");
+  console.error(erro);
+});
+
+mongoose.connection.on("disconnected", () => {
+  console.log("MongoDB desconectado");
+});
 
 const corridaSchema = new mongoose.Schema(
   {
