@@ -5,7 +5,7 @@ const swaggerUi = require("swagger-ui-express");
 const app = express();
 app.use(express.json());
 
-   mongoose.connect(process.env.MONGODB_URI)
+mongoose.connect(process.env.MONGODB_URI)
   .then(() => console.log("MongoDB conectado"))
   .catch((erro) => console.log("Erro ao conectar MongoDB:", erro));
 
@@ -175,7 +175,7 @@ app.get("/", (req, res) => {
 });
 
 app.get("/corridas/:id", async (req, res) => {
-
+  
   const corrida = await Corrida.findOne(
     { id: Number(req.params.id) },
     { _id: 0 }
@@ -194,30 +194,49 @@ app.get("/corridas/:id", async (req, res) => {
   ritmoMedio: corrida.ritmoMedio
 });
 });
-app.post("/corridas", async (req, res) => {
+app.get("/corridas", async (req, res) => {
+  try {
+    const corridas = await Corrida.find({}, { _id: 0 });
 
-  const quantidade = await Corrida.countDocuments();
+    res.json(corridas);
+  } catch (erro) {
+    console.error(erro);
 
-  const distancia = Number(req.body.distancia);
-  const tempo = Number(req.body.tempo);
-
-  const ritmo = (tempo / distancia).toFixed(2);
-
-  const novaCorrida = await Corrida.create({
-    id: quantidade + 1,
-
-    distancia,
-    tempo,
-
-    ritmoMedio: `${ritmo} min/km`
-  });
-
- res.status(201).json({
-  id: novaCorrida.id,
-  distancia: `${novaCorrida.distancia} km`,
-  tempo: `${novaCorrida.tempo} minutos`,
-  ritmoMedio: novaCorrida.ritmoMedio
+    res.status(500).json({
+      erro: erro.message
+    });
+  }
 });
+app.post("/corridas", async (req, res) => {
+  try {
+    const quantidade = await Corrida.countDocuments();
+
+    const distancia = Number(req.body.distancia);
+    const tempo = Number(req.body.tempo);
+
+    const ritmo = (tempo / distancia).toFixed(2);
+
+    const novaCorrida = await Corrida.create({
+      id: quantidade + 1,
+      distancia,
+      tempo,
+      ritmoMedio: `${ritmo} min/km`
+    });
+
+    res.status(201).json({
+      id: novaCorrida.id,
+      distancia: `${novaCorrida.distancia} km`,
+      tempo: `${novaCorrida.tempo} minutos`,
+      ritmoMedio: novaCorrida.ritmoMedio
+    });
+
+  } catch (erro) {
+    console.error(erro);
+
+    res.status(500).json({
+      erro: erro.message
+    });
+  }
 });
 
 app.put("/corridas/:id", async (req, res) => {
